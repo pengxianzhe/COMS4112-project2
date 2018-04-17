@@ -37,5 +37,6 @@ public class Main {
 			Integer value = Integer.parseInt(parts[1].trim());
 			configMap.put(key, value);
 		}
+		s.close();
 	}
 }
