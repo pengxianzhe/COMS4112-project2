@@ -16,18 +16,42 @@ public class Main {
 			System.exit(0);
 		}
 		
+		// read query and config files
 		String queryFilePath = args[0];
 		String configFilePath = args[1];
 		
+		List<String> queryList = new ArrayList<String>();
 		Map<String, Integer> configMap = new HashMap<String, Integer>();
 		try {
+			readQuery(queryFilePath, queryList);
 			readConfig(configFilePath, configMap);
 		} catch (FileNotFoundException e) {
-			System.out.println("Config file not found, please check config file path");
+			System.out.println("Qeury or config file not found, please check file path");
 			System.exit(0);
 		}
 	}
 	
+	/**
+	 * Read query file and store each line as an element in the query list
+	 * @param queryFilePath path of query file
+	 * @param queryList list to store queries
+	 * @throws FileNotFoundException if query file is not found
+	 */
+	private static void readQuery(String queryFilePath, List<String> queryList) throws FileNotFoundException {
+		Scanner s = new Scanner(new File(queryFilePath));
+		while (s.hasNextLine()) {
+			String line = s.nextLine();
+			queryList.add(line);
+		}
+		s.close();
+	}
+	
+	/**
+	 * Read config file and store each line as an key value pair in the config map
+	 * @param configFilePath path of config file
+	 * @param configMap map to store config key value pairs
+	 * @throws FileNotFoundException if config file is not found
+	 */
 	private static void readConfig(String configFilePath, Map<String, Integer> configMap) throws FileNotFoundException {
 		Scanner s = new Scanner(new File(configFilePath));
 		while (s.hasNextLine()) {
