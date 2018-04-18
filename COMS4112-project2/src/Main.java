@@ -29,6 +29,22 @@ public class Main {
 			System.out.println("Qeury or config file not found, please check file path");
 			System.exit(0);
 		}
+		
+		// main loop
+		for (String query : queryList) {
+			// preprocessing query
+			System.out.println(query);
+			String[] queryArray = query.trim().split(" ");
+			int k = queryArray.length; //length of array
+			double[] pArray = new double[k]; // ith element in pArray is p_i
+			for (int i = 0; i < k; i++) {
+				pArray[i] = Double.parseDouble(queryArray[i].trim());
+			}
+			
+			//TODO: Step 1
+			//TODO: Step 2
+			//TODO: print final cost
+		}
 	}
 	
 	/**
