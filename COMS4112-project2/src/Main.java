@@ -56,6 +56,18 @@ public class Main {
 		}
 	}
 	
+	private static void step1(Element[] a, Map<String, Integer> configMap) {
+		
+	}
+	
+	private static void step2(Element[] a, Map<String, Integer> configMap) {
+		
+	}
+	
+	private static void printOutput(Element[] a) {
+		
+	}
+	
 	/**
 	 * Read query file and store each line as an element in the query list
 	 * @param queryFilePath path of query file
