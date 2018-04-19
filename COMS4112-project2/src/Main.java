@@ -1,8 +1,10 @@
-/* COMS 4112 project2
+/** 
+ * COMS 4112 project2
  * Xianzhe Peng, xp2155@columbia.edu
  * Siddharth Preetam, sp3567@columbia.edu
  * 
- * Main class for the project
+ * Main class for the project.
+ * It contains implementations for input/output and algorithm
  */
 
 import java.io.*;
@@ -32,13 +34,13 @@ public class Main {
 		
 		// main loop
 		for (String query : queryList) {
-			// preprocessing query
+			// preprocessing query, extract selectivity values
 			System.out.println(query);
 			String[] queryArray = query.trim().split(" ");
-			int k = queryArray.length; //length of array
-			double[] pArray = new double[k]; // ith element in pArray is p_i
+			int k = queryArray.length; // number of conditions for this query
+			double[] p = new double[k]; // array of selectivity for each condition, ith element in pArray is p_i
 			for (int i = 0; i < k; i++) {
-				pArray[i] = Double.parseDouble(queryArray[i].trim());
+				p[i] = Double.parseDouble(queryArray[i].trim());
 			}
 			
 			//TODO: Step 1
