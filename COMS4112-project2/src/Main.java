@@ -50,51 +50,44 @@ public class Main {
 				a[i] = new Element(pArray, k, i);
 			}
 			
-			//TODO: Step 1
-			//TODO: Step 2
-			//TODO: print C code and final cost
+			// perform the two steps in algorithm 4.11
+			step1(a, configMap);
+			step2(a, configMap);
+			
+			// print out the C code and cost for optimal plan
+			printOutput(a);
 		}
 	}
 
 	private static double getNoBranchCost(Element a, Map<String, Integer> configMap){
 		int k = a.getN();
-
-		double noBranchCost = k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("a");
-
-		return noBranchCost;
+		return k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("a");
 	}
 
 	private static double getlogicalAndCost(Element a, Map<String, Integer> configMap){
 		int k = a.getN();
 		double combinedSelectivity = a.getP();
-
 		double q = Math.min(combinedSelectivity, 1 - combinedSelectivity);
-
-		double logicalAndCost = k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("t") + q*configMap.get("m") + combinedSelectivity*configMap.get("a");
-
-		return logicalAndCost;
+		return k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("t") +
+				q*configMap.get("m") + combinedSelectivity*configMap.get("a");
 	}
 	
 	private static void step1(Element[] a, Map<String, Integer> configMap) {
-		for(int i=0;i<a.length;i++){
+		for(int i=1;i<a.length;i++){
 			double logicalAndCost = getlogicalAndCost(a[i], configMap);
 			double noBranchCost = getNoBranchCost(a[i], configMap);
 
-			double lowerCost = 0.0;
 			if(logicalAndCost < noBranchCost)
-				lowerCost = logicalAndCost;
+				a[i].setC(logicalAndCost);
 			else{
-				lowerCost = noBranchCost;
+				a[i].setC(noBranchCost);
 				a[i].setB(true);
 			}
-
-			a[i].setC(lowerCost);
 		}
 	}
 	
 	private static void step2(Element[] a, Map<String, Integer> configMap) {
-		int size = a.length;
-		for (int i = 1; i < size; i++) {
+		for (int i = 1; i < a.length; i++) {
 			// i is the integer representation of set s' union s
 			for (int j = 1; j < i; j++) {
 				// j is the integer representation of set s'
