@@ -201,28 +201,28 @@ public class Main {
         }
     }
 
-	private static void generateCode(List<Element> planIndices){
-	    string output = "if(";
+	private static String generateCode(List<Element> planIndices){
+	    String output = "if(";
 	    String innerTerm = "";
 	    String noBranch = "";
 	    String logicalAnd = "";
 	    String branchingAnd = "";
-	    string loopInner = "";
+	    String loopInner = "";
 
 	    // code to add logical and terms
 	    for(Element e: planIndices){
             Bitmap b = e.getBitmap();
             int index = -1;
             for(int i=0;i<b.length();i++){
-                if(b[i].get(i) == true)
+                if(b.get(i) == true)
                     index = i+1;
 
                 if(logicalAnd.length() > 0)
                     logicalAnd += " & ";
-                logicalAnd += "t" + index + "[o" + n + "[i]]";
+                logicalAnd += "t" + index + "[o" + index + "[i]]";
             }
 
-            if(e.b == true){
+            if(e.isB()){
                 if(noBranch.length() > 0)
                     noBranch += " & ";
                 noBranch += logicalAnd;
@@ -245,18 +245,22 @@ public class Main {
 
     }
 
-	private static void printOutput(Element[] a, int index, List<Element> planIndices) {
-        Element e = Element[index];
+	private static void backtrackPlan(Element[] a, int index, List<Element> planIndices) {
+        Element e = a[index];
 
         if (e.getL() == 0 && e.getR() == 0) {
-            queryPlan.add(a[index]);
+            planIndices.add(a[index]);
         } else {
-            printOutput(a, a.getL(), planIndices);
-            printOutput(a, a.getR(), planIndices);
+            backtrackPlan(a, a[index].getL(), planIndices);
+            backtrackPlan(a, a[index].getR(), planIndices);
         }
     }
-
-	private static void finalOutput()
+	
+	private static void printOutput(Element[] a) {
+		List<Element> planIndices = new ArrayList<Element>();
+		backtrackPlan(a, a.length - 1, planIndices);
+		generateCode(planIndices);
+	}
 	
 	/**
 	 * Read query file and store each line as an element in the query list
