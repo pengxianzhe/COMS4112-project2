@@ -1,3 +1,6 @@
+import java.io.*;
+import java.util.*;
+
 /** 
  * COMS 4112 project2
  * Xianzhe Peng, xp2155@columbia.edu
@@ -6,9 +9,6 @@
  * Main class for the project.
  * It contains implementations for input/output and algorithm
  */
-
-import java.io.*;
-import java.util.*;
 
 public class Main {
 	public static void main(String[] args) {
@@ -43,6 +43,7 @@ public class Main {
 				p[i] = Double.parseDouble(queryArray[i].trim());
 			}
 			
+			//TODO: create array of elements
 			//TODO: Step 1
 			//TODO: Step 2
 			//TODO: print final cost
