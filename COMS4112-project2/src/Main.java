@@ -52,7 +52,7 @@ public class Main {
 			
 			//TODO: Step 1
 			//TODO: Step 2
-			//TODO: print final cost
+			//TODO: print C code and final cost
 		}
 	}
 	
