@@ -59,21 +59,18 @@ public class Main {
 	private static double getNoBranchCost(Element a, Map<String, Integer> configMap){
 		int k = a.getN();
 
-		double noBranchCost = k*Double.parseDouble(configMap.get("r")) + (k-1)*Double.parseDouble(configMap.get("l")) + k*Double.parseDouble(configMap.get("f")) + Double. parseDouble(configMap.get("a"));
+		double noBranchCost = k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("a");
 
 		return noBranchCost;
 	}
 
-	private static void getlogicalAndCost(Element a, Map<String, Integer> configMap){
+	private static double getlogicalAndCost(Element a, Map<String, Integer> configMap){
 		int k = a.getN();
 		double combinedSelectivity = a.getP();
 
-		if(combinedSelectivity <= 0.5)
-			double q = combinedSelectivity;
-		else
-			double q = 1-combinedSelectivity;
+		double q = Math.min(combinedSelectivity, 1 - combinedSelectivity);
 
-		double logicalAndCost = k*Double.parseDouble(configMap.get("r")) + (k-1)*Double.parseDouble(configMap.get("l")) + k*Double.parseDouble(configMap.get("f")) + Double.parseDouble(configMap.get("t")) + q*Double.parseDouble(configMap.get("m")) + combinedSelectivity*Double.parseDouble(configMap.get("a"));
+		double logicalAndCost = k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("t") + q*configMap.get("m") + combinedSelectivity*configMap.get("a");
 
 		return logicalAndCost;
 	}
