@@ -50,54 +50,118 @@ public class Main {
 				a[i] = new Element(pArray, k, i);
 			}
 			
-			//TODO: Step 1
-			//TODO: Step 2
-			//TODO: print C code and final cost
+			// perform the two steps in algorithm 4.11
+			step1(a, configMap);
+			step2(a, configMap);
+			
+			// print out the C code and cost for optimal plan
+			printOutput(a);
 		}
 	}
 
 	private static double getNoBranchCost(Element a, Map<String, Integer> configMap){
 		int k = a.getN();
-
-		double noBranchCost = k*Double.parseDouble(configMap.get("r")) + (k-1)*Double.parseDouble(configMap.get("l")) + k*Double.parseDouble(configMap.get("f")) + Double. parseDouble(configMap.get("a"));
-
-		return noBranchCost;
+		return k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("a");
 	}
 
-	private static void getlogicalAndCost(Element a, Map<String, Integer> configMap){
+	private static double getlogicalAndCost(Element a, Map<String, Integer> configMap){
 		int k = a.getN();
 		double combinedSelectivity = a.getP();
-
-		if(combinedSelectivity <= 0.5)
-			double q = combinedSelectivity;
-		else
-			double q = 1-combinedSelectivity;
-
-		double logicalAndCost = k*Double.parseDouble(configMap.get("r")) + (k-1)*Double.parseDouble(configMap.get("l")) + k*Double.parseDouble(configMap.get("f")) + Double.parseDouble(configMap.get("t")) + q*Double.parseDouble(configMap.get("m")) + combinedSelectivity*Double.parseDouble(configMap.get("a"));
-
-		return logicalAndCost;
+		double q = Math.min(combinedSelectivity, 1 - combinedSelectivity);
+		return k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("t") +
+				q*configMap.get("m") + combinedSelectivity*configMap.get("a");
 	}
 	
 	private static void step1(Element[] a, Map<String, Integer> configMap) {
-		for(int i=0;i<a.length;i++){
+		for(int i=1;i<a.length;i++){
 			double logicalAndCost = getlogicalAndCost(a[i], configMap);
 			double noBranchCost = getNoBranchCost(a[i], configMap);
 
-			double lowerCost = 0.0;
 			if(logicalAndCost < noBranchCost)
-				lowerCost = logicalAndCost;
+				a[i].setC(logicalAndCost);
 			else{
-				lowerCost = noBranchCost;
+				a[i].setC(noBranchCost);
 				a[i].setB(true);
 			}
-
-			a[i].setC(lowerCost);
 		}
 	}
 	
 	private static void step2(Element[] a, Map<String, Integer> configMap) {
-		
+		for (int i = 1; i < a.length; i++) {
+			// i is the integer representation of set s' union s
+			for (int j = 1; j < i; j++) {
+				// j is the integer representation of set s'
+				int k = a[i].difference(a[j]); 
+				// k is the integer representation of set s
+				if (k == -1) {
+					// j is not a subset of i, skip this combination
+					continue;
+				}
+				
+				double pj = a[j].getP(); // selectivity of set j
+				int jFCost = fCost(a, j, configMap); // fixed cost of set j
+				
+				// prune the search space using lemma 4.8 and 4.9
+				if (!cMetricCheck(a, pj, jFCost, k, configMap)) {
+					// c metric of j is dominated by c metric of first &-term in k, skip this combination
+					continue;
+				}
+				if (pj <= 0.5 && !dMetricCheck(a, pj, jFCost, k, true, configMap)) {
+					// d metric of j is dominated by d metric of other &-term in k, skip this combination
+					continue;
+				}
+				
+				// compute the cost of set i for current combination
+				double q = Math.min(pj, 1 - pj);
+				double cost = jFCost + configMap.get("m") * q + pj * a[k].getC();
+				
+				// compare and update the cost of set i
+				if (cost < a[i].getC()) {
+					// the cost of current combination is the best so far
+					a[i].setC(cost); // set the cost of i to the cost of this combination
+					a[i].setL(j); // set the left child of i to j (s')
+					a[i].setR(k); // set the right child of i to k (s)
+				}
+			}
+		}
 	}
+
+	private static int fCost(Element[] a, int i, Map<String, Integer> configMap) {
+		int n = a[i].getN(); // number of basic terms in set n
+		return n * configMap.get("r") + (n - 1) * configMap.get("l") + n * configMap.get("f") + configMap.get("t");
+	}
+	
+	private static boolean cMetricCheck(Element[] a, double pj, int jFCost, int k, Map<String, Integer> configMap) {
+		int kLeft = a[k].getL(); // integer representation of left most &-term in k
+		if (kLeft == 0) {
+			// if the set k contains only one &-term, then kLeft is itself
+			kLeft = k;
+		}
+		
+		double pkLeft = a[kLeft].getP(); // selectivity of set kLeft
+		int kLeftFCost = fCost(a, kLeft, configMap); // fixed cost of set kLeft
+		return pkLeft > pj && (pkLeft - 1) / kLeftFCost >= (pj - 1) / jFCost;
+	}
+
+    private static boolean dMetricCheck(Element[] a, double pj, int jFCost, int i, boolean leftMost,
+                                        Map<String, Integer> configMap) {
+        int left = a[i].getL(); // integer representation of left child of i
+        int right = a[i].getR(); // integer representation of right child of i
+        if (left == 0 && right == 0) {
+            // base case: set i is a &-term
+            if (leftMost) {
+                // i is the left most &-term, skip
+                return true;
+            }
+            double pi = a[i].getP(); // selectivity of set i
+            int iFCost = fCost(a, i, configMap); // fixed cost of set i
+            return pi >= pj && iFCost >= jFCost;
+        } else {
+            // set i is not a &-term, find all &-terms in set i
+            return dMetricCheck(a, pj, jFCost, left, leftMost, configMap) &&
+                    dMetricCheck(a, pj, jFCost, right, false, configMap);
+        }
+    }
 
 	private static void generateCode(List<Element> planIndices){
 	    string output = "if(";
@@ -142,18 +206,17 @@ public class Main {
 	    return output + loopInner;
 
     }
-	
-	private static void printOutput(Element[] a, int index, List<Element> planIndices) {
-		Element e = Element[index];
 
-		if(e.getL() == 0 && e.getR() == 0){
+	private static void printOutput(Element[] a, int index, List<Element> planIndices) {
+        Element e = Element[index];
+
+        if (e.getL() == 0 && e.getR() == 0) {
             queryPlan.add(a[index]);
-        }
-        else{
+        } else {
             printOutput(a, a.getL(), planIndices);
             printOutput(a, a.getR(), planIndices);
         }
-	}
+    }
 
 	private static void finalOutput()
 	
