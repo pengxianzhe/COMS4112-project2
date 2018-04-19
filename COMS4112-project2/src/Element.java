@@ -42,6 +42,19 @@ public class Element {
 		l = 0;
 		r = 0;
 	}
+	
+	/**
+	 * Return the index of set for items that is in this set but not in the subset
+	 * @param subset the element object that represents a subset of this set
+	 * @return the index of set for items that is in this set but not in the subset
+	 *         return -1 if the set passed in is not a subset of this set
+	 */
+	public int difference(Element subset) {
+		if (n < subset.getN()) {
+			return -1;
+		}
+		return bitmap.difference(subset.getBitmap());
+	}
 
 	public boolean isB() {
 		return b;
