@@ -34,16 +34,22 @@ public class Main {
 		
 		// main loop
 		for (String query : queryList) {
-			// preprocessing query, extract selectivity values
+			// preprocessing query, compute number of basic terms and extract selectivity values
 			System.out.println(query);
 			String[] queryArray = query.trim().split(" ");
 			int k = queryArray.length; // number of basic terms for this query
+			int size = (int) Math.pow(2, k); // number of subsets for set S: 2 ^ k
 			double[] pArray = new double[k]; // array of selectivity for each basic term, ith element in pArray is p_i
 			for (int i = 0; i < k; i++) {
 				pArray[i] = Double.parseDouble(queryArray[i].trim());
 			}
 			
-			//TODO: create array of elements
+			// create array A for all subsets of set S
+			Element[] a = new Element[size];
+			for (int i = 0; i < size; i++) {
+				a[i] = new Element(pArray, k, i);
+			}
+			
 			//TODO: Step 1
 			//TODO: Step 2
 			//TODO: print final cost
