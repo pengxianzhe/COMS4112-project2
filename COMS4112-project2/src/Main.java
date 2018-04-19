@@ -61,9 +61,83 @@ public class Main {
 	}
 	
 	private static void step2(Element[] a, Map<String, Integer> configMap) {
-		
+		int size = a.length;
+		for (int i = 1; i < size; i++) {
+			// i is the integer representation of set s' union s
+			for (int j = 1; j < i; j++) {
+				// j is the integer representation of set s'
+				int k = a[i].difference(a[j]); 
+				// k is the integer representation of set s
+				if (k == -1) {
+					// j is not a subset of i, skip this combination
+					continue;
+				}
+				
+				double pj = a[j].getP(); // selectivity of set j
+				int jFCost = fCost(a, j, configMap); // fixed cost of set j
+				
+				// prune the search space using lemma 4.8 and 4.9
+				if (!cMetricCheck(a, pj, jFCost, k, configMap)) {
+					// c metric of j is dominated by c metric of first &-term in k, skip this combination
+					continue;
+				}
+				if (pj <= 0.5 && !dMetricCheck(a, pj, jFCost, k, true, configMap)) {
+					// d metric of j is dominated by d metric of other &-term in k, skip this combination
+					continue;
+				}
+				
+				// compute the cost of set i for current combination
+				double q = Math.min(pj, 1 - pj);
+				double cost = jFCost + configMap.get("m") * q + pj * a[k].getC();
+				
+				// compare and update the cost of set i
+				if (cost < a[i].getC()) {
+					// the cost of current combination is the best so far
+					a[i].setC(cost); // set the cost of i to the cost of this combination
+					a[i].setL(j); // set the left child of i to j (s')
+					a[i].setR(k); // set the right child of i to k (s)
+				}
+			}
+		}
+	}
+
+	private static int fCost(Element[] a, int i, Map<String, Integer> configMap) {
+		int n = a[i].getN(); // number of basic terms in set n
+		return n * configMap.get("r") + (n - 1) * configMap.get("l") + n * configMap.get("f") + configMap.get("t");
 	}
 	
+	private static boolean cMetricCheck(Element[] a, double pj, int jFCost, int k, Map<String, Integer> configMap) {
+		int kLeft = a[k].getL(); // integer representation of left most &-term in k
+		if (kLeft == 0) {
+			// if the set k contains only one &-term, then kLeft is itself
+			kLeft = k;
+		}
+		
+		double pkLeft = a[kLeft].getP(); // selectivity of set kLeft
+		int kLeftFCost = fCost(a, kLeft, configMap); // fixed cost of set kLeft
+		return pkLeft > pj && (pkLeft - 1) / kLeftFCost >= (pj - 1) / jFCost;
+	}
+	
+	private static boolean dMetricCheck(Element[] a, double pj, int jFCost, int i, boolean leftMost,
+			Map<String, Integer> configMap) {
+		int left = a[i].getL(); // integer representation of left child of i
+		int right = a[i].getR(); // integer representation of right child of i
+		if (left == 0 && right == 0) {
+			// base case: set i is a &-term
+			if (leftMost) {
+				// i is the left most &-term, skip
+				return true;
+			}
+			double pi = a[i].getP(); // selectivity of set i
+			int iFCost = fCost(a, i, configMap); // fixed cost of set i
+			return pi >= pj && iFCost >= jFCost;
+		} else {
+			// set i is not a &-term, find all &-terms in set i
+			return dMetricCheck(a, pj, jFCost, left, leftMost, configMap) &&
+					dMetricCheck(a, pj, jFCost, right, false, configMap);
+		}
+	}
+
 	private static void printOutput(Element[] a) {
 		
 	}
