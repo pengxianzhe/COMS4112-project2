@@ -180,30 +180,83 @@ public class Main {
 		int kLeftFCost = fCost(a, kLeft, configMap); // fixed cost of set kLeft
 		return pkLeft > pj && (pkLeft - 1) / kLeftFCost >= (pj - 1) / jFCost;
 	}
-	
-	private static boolean dMetricCheck(Element[] a, double pj, int jFCost, int i, boolean leftMost,
-			Map<String, Integer> configMap) {
-		int left = a[i].getL(); // integer representation of left child of i
-		int right = a[i].getR(); // integer representation of right child of i
-		if (left == 0 && right == 0) {
-			// base case: set i is a &-term
-			if (leftMost) {
-				// i is the left most &-term, skip
-				return true;
-			}
-			double pi = a[i].getP(); // selectivity of set i
-			int iFCost = fCost(a, i, configMap); // fixed cost of set i
-			return pi >= pj && iFCost >= jFCost;
-		} else {
-			// set i is not a &-term, find all &-terms in set i
-			return dMetricCheck(a, pj, jFCost, left, leftMost, configMap) &&
-					dMetricCheck(a, pj, jFCost, right, false, configMap);
-		}
-	}
 
-	private static void printOutput(Element[] a) {
-		
-	}
+    private static boolean dMetricCheck(Element[] a, double pj, int jFCost, int i, boolean leftMost,
+                                        Map<String, Integer> configMap) {
+        int left = a[i].getL(); // integer representation of left child of i
+        int right = a[i].getR(); // integer representation of right child of i
+        if (left == 0 && right == 0) {
+            // base case: set i is a &-term
+            if (leftMost) {
+                // i is the left most &-term, skip
+                return true;
+            }
+            double pi = a[i].getP(); // selectivity of set i
+            int iFCost = fCost(a, i, configMap); // fixed cost of set i
+            return pi >= pj && iFCost >= jFCost;
+        } else {
+            // set i is not a &-term, find all &-terms in set i
+            return dMetricCheck(a, pj, jFCost, left, leftMost, configMap) &&
+                    dMetricCheck(a, pj, jFCost, right, false, configMap);
+        }
+    }
+
+	private static void generateCode(List<Element> planIndices){
+	    string output = "if(";
+	    String innerTerm = "";
+	    String noBranch = "";
+	    String logicalAnd = "";
+	    String branchingAnd = "";
+	    string loopInner = "";
+
+	    // code to add logical and terms
+	    for(Element e: planIndices){
+            Bitmap b = e.getBitmap();
+            int index = -1;
+            for(int i=0;i<b.length();i++){
+                if(b[i].get(i) == true)
+                    index = i+1;
+
+                if(logicalAnd.length() > 0)
+                    logicalAnd += " & ";
+                logicalAnd += "t" + index + "[o" + n + "[i]]";
+            }
+
+            if(e.b == true){
+                if(noBranch.length() > 0)
+                    noBranch += " & ";
+                noBranch += logicalAnd;
+            }
+            else{
+                if(branchingAnd.length() > 0)
+                    branchingAnd += " && ";
+                branchingAnd += "(" + logicalAnd + ")";
+            }
+        }
+
+        output += branchingAnd + ") {";
+
+	    if(noBranch.length() == 0)
+	        loopInner += "answer[j++] = i; \n }";
+	    else
+	        loopInner += "\t answer[j] = i; \n j+= (" + noBranch + "); \n }";
+
+	    return output + loopInner;
+
+    }
+
+	private static void printOutput(Element[] a, int index, List<Element> planIndices) {
+        Element e = Element[index];
+
+        if (e.getL() == 0 && e.getR() == 0) {
+            queryPlan.add(a[index]);
+        } else {
+            printOutput(a, a.getL(), planIndices);
+            printOutput(a, a.getR(), planIndices);
+        }
+    }
+
+	private static void finalOutput()
 	
 	/**
 	 * Read query file and store each line as an element in the query list
