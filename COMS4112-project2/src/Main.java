@@ -55,9 +55,44 @@ public class Main {
 			//TODO: print C code and final cost
 		}
 	}
+
+	private static double getNoBranchCost(Element a, Map<String, Integer> configMap){
+		int k = a.getN();
+
+		double noBranchCost = k*Double.parseDouble(configMap.get("r")) + (k-1)*Double.parseDouble(configMap.get("l")) + k*Double.parseDouble(configMap.get("f")) + Double. parseDouble(configMap.get("a"));
+
+		return noBranchCost;
+	}
+
+	private static void getlogicalAndCost(Element a, Map<String, Integer> configMap){
+		int k = a.getN();
+		double combinedSelectivity = a.getP();
+
+		if(combinedSelectivity <= 0.5)
+			double q = combinedSelectivity;
+		else
+			double q = 1-combinedSelectivity;
+
+		double logicalAndCost = k*Double.parseDouble(configMap.get("r")) + (k-1)*Double.parseDouble(configMap.get("l")) + k*Double.parseDouble(configMap.get("f")) + Double.parseDouble(configMap.get("t")) + q*Double.parseDouble(configMap.get("m")) + combinedSelectivity*Double.parseDouble(configMap.get("a"));
+
+		return logicalAndCost;
+	}
 	
 	private static void step1(Element[] a, Map<String, Integer> configMap) {
-		
+		for(int i=0;i<a.length;i++){
+			double logicalAndCost = getlogicalAndCost(a[i], configMap);
+			double noBranchCost = getNoBranchCost(a[i], configMap);
+
+			double lowerCost = 0.0;
+			if(logicalAndCost < noBranchCost)
+				lowerCost = logicalAndCost;
+			else{
+				lowerCost = noBranchCost;
+				a[i].setB(true);
+			}
+
+			a[i].setC(lowerCost);
+		}
 	}
 	
 	private static void step2(Element[] a, Map<String, Integer> configMap) {
