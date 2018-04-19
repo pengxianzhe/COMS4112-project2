@@ -74,23 +74,25 @@ public class Bitmap {
 	}
 	
 	/**
-	 * Return a bitmap for items that is in this set but not in the subset
+	 * Return the index of set for items that is in this set but not in the subset
 	 * @param subset a bitmap that represents a subset of this set
-	 * @return a bitmap for items that is in this set but not in the subset
-	 *         return null if the set passed in is not a subset of this set
+	 * @return the index of set for items that is in this set but not in the subset
+	 *         return -1 if the set passed in is not a subset of this set
 	 */
-	public Bitmap difference(Bitmap subset) {
+	public int difference(Bitmap subset) {
 		if (subset.length() != bitmap.length) {
-			return null;
+			return -1;
 		}
 		int length = bitmap.length;
-		Bitmap result = new Bitmap(length);
+		int result = 0;
 		for (int i = 0; i < length; i++) {
 			boolean subvalue = subset.get(i);
 			if (!bitmap[i] && subvalue) {
-				return null;
+				return -1;
 			}
-			result.set(i, !(bitmap[i] == subvalue));
+			if (bitmap[i] && !subvalue) {
+				result += (int) Math.pow(2, i);
+			}
 		}
 		return result;
 	}
