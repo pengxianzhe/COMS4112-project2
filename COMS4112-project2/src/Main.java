@@ -44,7 +44,8 @@ public class Main {
 				pArray[i] = Double.parseDouble(queryArray[i].trim());
 			}
 			
-			// create array A for all subsets of set S
+			// create array A for all 2^k - 1 subsets of set S, where the index is the integer representation of that subset
+			// integer representation: bitmap <-> binary number <-> integer
 			Element[] a = new Element[size];
 			for (int i = 0; i < size; i++) {
 				a[i] = new Element(pArray, k, i);
@@ -59,24 +60,46 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Compute the cost of a set for no branch algorithm under current config paramter settings
+	 * @param a the element representing the set
+	 * @param configMap map object that contains config parameters
+	 * @return the cost of the set for no branch algorithm
+	 */
 	private static double getNoBranchCost(Element a, Map<String, Integer> configMap){
-		int k = a.getN();
+		int k = a.getN(); // number of basic terms in set a
 		return k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("a");
 	}
 
+	/**
+	 * Compute the cost of a set for logical and algorithm under current config parameter settings
+	 * @param a the element representing the set
+	 * @param configMap map object that contains config parameters
+	 * @return the cost of the set for logical and algorithm
+	 */
 	private static double getlogicalAndCost(Element a, Map<String, Integer> configMap){
-		int k = a.getN();
-		double combinedSelectivity = a.getP();
+		int k = a.getN(); // number of basic terms in set a
+		double combinedSelectivity = a.getP(); // selectivity of set a
 		double q = Math.min(combinedSelectivity, 1 - combinedSelectivity);
 		return k*configMap.get("r") + (k-1)*configMap.get("l") + k*configMap.get("f") + configMap.get("t") +
 				q*configMap.get("m") + combinedSelectivity*configMap.get("a");
 	}
 	
+	/**
+	 * Perform the first step of the algorithm
+	 * Compute the optimal cost for all non empty subsets using only &-terms and store it in c attribute
+	 * in element object. Compare the cost of no branch algorithm and logical and algorithm. If the no 
+	 * branch algorithm has a lower cost, also set b attribute in element object to true
+	 * @param a the array of elements for all 2^k - 1 subsets of set S
+	 * @param configMap map object that contains config parameters
+	 */
 	private static void step1(Element[] a, Map<String, Integer> configMap) {
 		for(int i=1;i<a.length;i++){
+			// compute no branch cost and logical and cost
 			double logicalAndCost = getlogicalAndCost(a[i], configMap);
 			double noBranchCost = getNoBranchCost(a[i], configMap);
 
+			// compare the two costs and store the optimal cost
 			if(logicalAndCost < noBranchCost)
 				a[i].setC(logicalAndCost);
 			else{
@@ -86,6 +109,14 @@ public class Main {
 		}
 	}
 	
+	/**
+	 * Perform the second step of the algorithm
+	 * Compute the optimal cost for all non empty subsets using mixed algorithm and store it in c attribute
+	 * in element object. Also record the left child (first &-term) and right child (other terms) for the 
+	 * optimal plan for backtrack.
+	 * @param a the array of elements for all 2^k - 1 subsets of set S
+	 * @param configMap map object that contains config parameters
+	 */
 	private static void step2(Element[] a, Map<String, Integer> configMap) {
 		for (int i = 1; i < a.length; i++) {
 			// i is the integer representation of set s' union s
@@ -126,8 +157,15 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Compute the fixed cost of a subset under current config parameter settings
+	 * @param a the array of elements for all 2^k - 1 subsets of set S
+	 * @param i the integer representation of the subset
+	 * @param configMap map object that contains config parameters
+	 * @return fixed cost of the subset
+	 */
 	private static int fCost(Element[] a, int i, Map<String, Integer> configMap) {
-		int n = a[i].getN(); // number of basic terms in set n
+		int n = a[i].getN(); // number of basic terms in set i
 		return n * configMap.get("r") + (n - 1) * configMap.get("l") + n * configMap.get("f") + configMap.get("t");
 	}
 	
