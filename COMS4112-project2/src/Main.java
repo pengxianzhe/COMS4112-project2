@@ -37,10 +37,10 @@ public class Main {
 			// preprocessing query, extract selectivity values
 			System.out.println(query);
 			String[] queryArray = query.trim().split(" ");
-			int k = queryArray.length; // number of conditions for this query
-			double[] p = new double[k]; // array of selectivity for each condition, ith element in pArray is p_i
+			int k = queryArray.length; // number of basic terms for this query
+			double[] pArray = new double[k]; // array of selectivity for each basic term, ith element in pArray is p_i
 			for (int i = 0; i < k; i++) {
-				p[i] = Double.parseDouble(queryArray[i].trim());
+				pArray[i] = Double.parseDouble(queryArray[i].trim());
 			}
 			
 			//TODO: create array of elements
