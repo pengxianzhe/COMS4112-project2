@@ -212,14 +212,14 @@ public class Main {
 	    // code to add logical and terms
 	    for(Element e: planIndices){
             Bitmap b = e.getBitmap();
-            int index = -1;
             for(int i=0;i<b.length();i++){
-                if(b.get(i) == true)
-                    index = i+1;
+                if(b.get(i) == true) {
+                    int index = i+1;
 
-                if(logicalAnd.length() > 0)
-                    logicalAnd += " & ";
-                logicalAnd += "t" + index + "[o" + index + "[i]]";
+	                if(logicalAnd.length() > 0)
+	                    logicalAnd += " & ";
+	                logicalAnd += "t" + index + "[o" + index + "[i]]";
+                }
             }
 
             if(e.isB()){
@@ -259,7 +259,7 @@ public class Main {
 	private static void printOutput(Element[] a) {
 		List<Element> planIndices = new ArrayList<Element>();
 		backtrackPlan(a, a.length - 1, planIndices);
-		generateCode(planIndices);
+		System.out.println(generateCode(planIndices));
 	}
 	
 	/**
