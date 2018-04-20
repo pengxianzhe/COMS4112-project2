@@ -230,33 +230,46 @@ public class Main {
         }
     }
 
+    /**
+     * Construct the optimal plan from the last element (for the entire set) and append its c code to string buffer
+     * @param a a the array of elements for all 2^k - 1 subsets of set S
+     * @param index index of current element object
+     * @param last if current element is the last subset in the set
+     * @param sb string buffer to append to
+     */
 	private static void backtrackPlan(Element[] a, int index, boolean last, StringBuffer sb) {
         Element e = a[index];
 
         if (e.getL() == 0 && e.getR() == 0) {
-        	String logicalAnd = "";
-        	Bitmap b = e.getBitmap();
-            int count = 0;
-            for(int j = 0;j < b.length(); j++) {
-                if (b.get(j) == true) {
-                    int num = j+1;
+        	// base case: current subset index is an &-term, construct code for it
+        	String logicalAnd = ""; // string for current &-term, connected by logical and &
+        	Bitmap b = e.getBitmap(); // bitmap of current &-term
+            int count = 0; // number of basic terms in current &-term
+            for(int i = 0;i < b.length(); i++) {
+                if (b.get(i) == true) {
+                	// basic term i is included in current &-term, construct string and increment count
                     count++;
+                    int num = i+1;
 	                if (logicalAnd.length() > 0)
 	                    logicalAnd += " & ";
 	                logicalAnd += "t" + num + "[o" + num + "[i]]";
                 }
             }
             
+            // if there are more than 1 basic terms, put parenthesis () to wrap the &-term
             if (count != 1) {
         		logicalAnd = "(" + logicalAnd + ")";
         	}
             
             if (last) {
+            	// current &-term is last &-term, check for no branch
             	sb.delete(sb.length() - 4, sb.length());
             	if (e.isB()) {
+            		// current &-term is using no branch, move string to later and finish the if condition
             		sb.append(") {\n");
             		sb.append("\tanswer[j] = i;\n\tj+= " + logicalAnd + ";\n}\n");
             	} else {
+            		// current &-term is not using no branch, append string and close the if condition
             		sb.append(logicalAnd);
             		sb.append(") {\n\tanswer[j++] = i;\n}");
             	}
@@ -264,19 +277,31 @@ public class Main {
             	sb.append(logicalAnd);
             }
         } else {
+        	// current subset index is not an &-term, recursively combine all &-terms in it
             backtrackPlan(a, a[index].getL(), false, sb);
             sb.append(" && ");
             backtrackPlan(a, a[index].getR(), last, sb);
         }
     }
 	
+	/**
+	 * Construct the output string for a query and append it to string buffer
+	 * @param a the array of elements for all 2^k - 1 subsets of set S for that query
+	 * @param query the input string for that query
+	 * @param sb string buffer to append to
+	 */
 	private static void formatOutput(Element[] a, String query, StringBuffer sb) {
+		// query string
 		sb.append("==================================================================\n");
 		sb.append(query);
 		sb.append('\n');
+		
+		// the C code for optimal plan
 		sb.append("------------------------------------------------------------------\n");
 		sb.append("if(");
 		backtrackPlan(a, a.length - 1, true, sb);
+		
+		// cost for optimal plan
 		sb.append("------------------------------------------------------------------\n");
 		sb.append("cost: " + a[a.length - 1].getC());
 		sb.append('\n');

@@ -12,8 +12,8 @@ public class Element {
 	private double p; // product of selectivity of all terms
 	private boolean b; // whether no-branch optimization was used
 	private double c; // current best cost to subset
-	private int l; // integer index of left child of subplan
-	private int r; // integer index of right child of subplan
+	private int l; // integer representation of left child of subplan
+	private int r; // integer representation of right child of subplan
 	private Bitmap bitmap; // bitmap of this element
 	
 	/**
