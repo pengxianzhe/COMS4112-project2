@@ -49,20 +49,6 @@ public class Bitmap {
 	}
 	
 	/**
-	 * Increment the bitmap by 1
-	 * Bitmap is treated as binary number here, where bitmap[0] is the least significant bit
-	 * This function doesn't check for overflow
-	 */
-	public void increment() {
-		bitmap[0] = !bitmap[0];
-		int i = 0;
-		while (!bitmap[i] && i < bitmap.length - 1) {
-			i++;
-			bitmap[i] = !bitmap[i];
-		}
-	}
-	
-	/**
 	 * Convert an integer into binary number and set it to this bitmap
 	 * Bitmap[0] is the least significant bit
 	 * @param integer integer value to convert, must be within range(0, 2 ^ length - 1)
