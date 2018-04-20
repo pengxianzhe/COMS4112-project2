@@ -206,61 +206,90 @@ public class Main {
         }
     }
 
-	private static void generateCode(List<Element> planIndices, StringBuffer sb) {
-	    sb.append("if(");
-	    
-	    String noBranch = "";
-	    String branchingAnd = "";
+//	private static void generateCode(List<Element> planIndices, StringBuffer sb) {
+//	    sb.append("if(");
+//	    
+//	    String noBranch = "";
+//	    String branchingAnd = "";
+//
+//	    // code to add logical and terms
+//	    for(int i = 0; i < planIndices.size(); i++) {
+//	    	String logicalAnd = "";
+//	    	Element e = planIndices.get(i);
+//            Bitmap b = e.getBitmap();
+//            int count = 0;
+//            for(int j = 0;j < b.length(); j++) {
+//                if (b.get(j) == true) {
+//                    int index = j+1;
+//                    count++;
+//	                if (logicalAnd.length() > 0)
+//	                    logicalAnd += " & ";
+//	                logicalAnd += "t" + index + "[o" + index + "[i]]";
+//                }
+//            }
+//
+//            if (i == planIndices.size() - 1 && e.isB()) {
+//                noBranch = logicalAnd;
+//            } else {
+//                if (branchingAnd.length() > 0)
+//                    branchingAnd += " && ";
+//                if (count == 1) {
+//                	branchingAnd += logicalAnd;
+//                } else {
+//                	branchingAnd += "(" + logicalAnd + ")";
+//                }
+//            }
+//        }
+//
+//	    sb.append(branchingAnd);
+//	    sb.append(") {\n");
+//
+//	    if(noBranch.length() == 0) {
+//	        sb.append("\tanswer[j++] = i;\n}");
+//	    } else {
+//	        sb.append("\tanswer[j] = i;\n\tj+= (");
+//	    	sb.append(noBranch);
+//	    	sb.append(");\n}\n");
+//	    }
+//    }
 
-	    // code to add logical and terms
-	    for(int i = 0; i < planIndices.size(); i++) {
-	    	String logicalAnd = "";
-	    	Element e = planIndices.get(i);
-            Bitmap b = e.getBitmap();
-            int count = 0;
-            for(int j = 0;j < b.length(); j++) {
-                if (b.get(j) == true) {
-                    int index = j+1;
-                    count++;
-	                if (logicalAnd.length() > 0)
-	                    logicalAnd += " & ";
-	                logicalAnd += "t" + index + "[o" + index + "[i]]";
-                }
-            }
-
-            if (i == planIndices.size() - 1 && e.isB()) {
-                noBranch = logicalAnd;
-            } else {
-                if (branchingAnd.length() > 0)
-                    branchingAnd += " && ";
-                if (count == 1) {
-                	branchingAnd += logicalAnd;
-                } else {
-                	branchingAnd += "(" + logicalAnd + ")";
-                }
-            }
-        }
-
-	    sb.append(branchingAnd);
-	    sb.append(") {\n");
-
-	    if(noBranch.length() == 0) {
-	        sb.append("\tanswer[j++] = i;\n}");
-	    } else {
-	        sb.append("\tanswer[j] = i;\n\tj+= (");
-	    	sb.append(noBranch);
-	    	sb.append(");\n}\n");
-	    }
-    }
-
-	private static void backtrackPlan(Element[] a, int index, List<Element> planIndices) {
+	private static void backtrackPlan(Element[] a, int index, boolean last, StringBuffer sb) {
         Element e = a[index];
 
         if (e.getL() == 0 && e.getR() == 0) {
-            planIndices.add(a[index]);
+        	String logicalAnd = "";
+        	Bitmap b = e.getBitmap();
+            int count = 0;
+            for(int j = 0;j < b.length(); j++) {
+                if (b.get(j) == true) {
+                    int num = j+1;
+                    count++;
+	                if (logicalAnd.length() > 0)
+	                    logicalAnd += " & ";
+	                logicalAnd += "t" + num + "[o" + num + "[i]]";
+                }
+            }
+            
+            if (count != 1) {
+        		logicalAnd = "(" + logicalAnd + ")";
+        	}
+            
+            if (last) {
+            	sb.delete(sb.length() - 4, sb.length());
+            	if (e.isB()) {
+            		sb.append(") {\n");
+            		sb.append("\tanswer[j] = i;\n\tj+= " + logicalAnd + ";\n}\n");
+            	} else {
+            		sb.append(logicalAnd);
+            		sb.append(") {\n\tanswer[j++] = i;\n}");
+            	}
+            } else {
+            	sb.append(logicalAnd);
+            }
         } else {
-            backtrackPlan(a, a[index].getL(), planIndices);
-            backtrackPlan(a, a[index].getR(), planIndices);
+            backtrackPlan(a, a[index].getL(), false, sb);
+            sb.append(" && ");
+            backtrackPlan(a, a[index].getR(), last, sb);
         }
     }
 	
@@ -269,9 +298,10 @@ public class Main {
 		sb.append(query);
 		sb.append('\n');
 		sb.append("------------------------------------------------------------------\n");
-		List<Element> planIndices = new ArrayList<Element>();
-		backtrackPlan(a, a.length - 1, planIndices);
-		generateCode(planIndices, sb);
+		sb.append("if(");
+		//List<Element> planIndices = new ArrayList<Element>();
+		backtrackPlan(a, a.length - 1, true, sb);
+		//generateCode(planIndices, sb);
 		sb.append("------------------------------------------------------------------\n");
 		sb.append("cost: " + a[a.length - 1].getC());
 		sb.append('\n');
