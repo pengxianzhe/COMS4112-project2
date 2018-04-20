@@ -62,7 +62,12 @@ public class Main {
 		// print output for all queries
 		sb.append("==================================================================");
 		System.out.println(sb.toString());
-		// TODO: print to a file
+		try {
+			writeFile("output.txt", sb.toString());
+		} catch (FileNotFoundException e) {
+			System.out.println("Cannot create or write to file output.txt");
+			System.exit(0);
+		}
 	}
 
 	/**
@@ -338,5 +343,17 @@ public class Main {
 			configMap.put(key, value);
 		}
 		s.close();
+	}
+	
+	/**
+	 * Remove the content of output file and write a string to that file. The file is created if it doesn't exist
+	 * @param outputFilePath path of output file
+	 * @param output string to write
+	 * @throws FileNotFoundException if output file is not found and cannot be created
+	 */
+	private static void writeFile(String outputFilePath, String output) throws FileNotFoundException {
+		PrintStream outFile = new PrintStream(new File(outputFilePath));
+		outFile.println(output);
+		outFile.close();
 	}
 }
