@@ -179,18 +179,37 @@ public class Main {
 		return n * configMap.get("r") + (n - 1) * configMap.get("l") + n * configMap.get("f") + configMap.get("t");
 	}
 	
-	private static boolean cMetricCheck(Element[] a, double pj, int jFCost, int k, Map<String, Integer> configMap) {
-		int kLeft = a[k].getL(); // integer representation of left most &-term in k
-		if (kLeft == 0) {
-			// if the set k contains only one &-term, then kLeft is itself
-			kLeft = k;
+	/**
+	 * Compare the c metric of the &-term j and the left most &-term in subset i and return the result
+	 * @param a the array of elements for all 2^k - 1 subsets of set S
+	 * @param pj the selectivity of &-term j
+	 * @param jFCost the fixed cost of &-term j
+	 * @param i the integer representation of subset
+	 * @param configMap map object that contains config parameters
+	 * @return false if c metric of j is dominated by the c metric of left most &-term in i, true otherwise
+	 */
+	private static boolean cMetricCheck(Element[] a, double pj, int jFCost, int i, Map<String, Integer> configMap) {
+		int iLeft = a[i].getL(); // integer representation of left most &-term in set i
+		if (iLeft == 0) {
+			// if the set i contains only one &-term, then iLeft is itself
+			iLeft = i;
 		}
 		
-		double pkLeft = a[kLeft].getP(); // selectivity of set kLeft
-		int kLeftFCost = fCost(a, kLeft, configMap); // fixed cost of set kLeft
-		return pkLeft > pj && (pkLeft - 1) / kLeftFCost >= (pj - 1) / jFCost;
+		double piLeft = a[iLeft].getP(); // selectivity of set iLeft
+		int iLeftFCost = fCost(a, iLeft, configMap); // fixed cost of set iLeft
+		return piLeft > pj && (piLeft - 1) / iLeftFCost >= (pj - 1) / jFCost;
 	}
 
+	/**
+	 * Compare the d metric of the &-term j with all other (not the left most) &-term in subset i and return the result
+	 * @param a the array of elements for all 2^k - 1 subsets of set S
+	 * @param pj the selectivity of &-term j
+	 * @param jFCost the fixed cost of &-term j
+	 * @param i the integer representation of subset
+	 * @param leftMost whether current subset or &-term is left-most in i
+	 * @param configMap object that contains config parameters
+	 * @return false if d metric of j is dominated by the d metric of one of 'other' &-terms in i, true otherwise
+	 */
     private static boolean dMetricCheck(Element[] a, double pj, int jFCost, int i, boolean leftMost,
                                         Map<String, Integer> configMap) {
         int left = a[i].getL(); // integer representation of left child of i
@@ -210,53 +229,6 @@ public class Main {
                     dMetricCheck(a, pj, jFCost, right, false, configMap);
         }
     }
-
-//	private static void generateCode(List<Element> planIndices, StringBuffer sb) {
-//	    sb.append("if(");
-//	    
-//	    String noBranch = "";
-//	    String branchingAnd = "";
-//
-//	    // code to add logical and terms
-//	    for(int i = 0; i < planIndices.size(); i++) {
-//	    	String logicalAnd = "";
-//	    	Element e = planIndices.get(i);
-//            Bitmap b = e.getBitmap();
-//            int count = 0;
-//            for(int j = 0;j < b.length(); j++) {
-//                if (b.get(j) == true) {
-//                    int index = j+1;
-//                    count++;
-//	                if (logicalAnd.length() > 0)
-//	                    logicalAnd += " & ";
-//	                logicalAnd += "t" + index + "[o" + index + "[i]]";
-//                }
-//            }
-//
-//            if (i == planIndices.size() - 1 && e.isB()) {
-//                noBranch = logicalAnd;
-//            } else {
-//                if (branchingAnd.length() > 0)
-//                    branchingAnd += " && ";
-//                if (count == 1) {
-//                	branchingAnd += logicalAnd;
-//                } else {
-//                	branchingAnd += "(" + logicalAnd + ")";
-//                }
-//            }
-//        }
-//
-//	    sb.append(branchingAnd);
-//	    sb.append(") {\n");
-//
-//	    if(noBranch.length() == 0) {
-//	        sb.append("\tanswer[j++] = i;\n}");
-//	    } else {
-//	        sb.append("\tanswer[j] = i;\n\tj+= (");
-//	    	sb.append(noBranch);
-//	    	sb.append(");\n}\n");
-//	    }
-//    }
 
 	private static void backtrackPlan(Element[] a, int index, boolean last, StringBuffer sb) {
         Element e = a[index];
@@ -304,9 +276,7 @@ public class Main {
 		sb.append('\n');
 		sb.append("------------------------------------------------------------------\n");
 		sb.append("if(");
-		//List<Element> planIndices = new ArrayList<Element>();
 		backtrackPlan(a, a.length - 1, true, sb);
-		//generateCode(planIndices, sb);
 		sb.append("------------------------------------------------------------------\n");
 		sb.append("cost: " + a[a.length - 1].getC());
 		sb.append('\n');
