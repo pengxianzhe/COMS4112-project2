@@ -263,11 +263,18 @@ public class Main {
             
             if (last) {
             	// current &-term is last &-term, check for no branch
-            	sb.delete(sb.length() - 4, sb.length());
             	if (e.isB()) {
-            		// current &-term is using no branch, move string to later and finish the if condition
-            		sb.append(") {\n");
-            		sb.append("\tanswer[j] = i;\n\tj+= " + logicalAnd + ";\n}\n");
+            		// current &-term is using no branch
+                	if (index != a.length - 1) {
+                    	// current element is not the entire set, delete the extra &&, 
+                		// move string to later lines and finish the if condition
+                    	sb.delete(sb.length() - 4, sb.length());
+                		sb.append(") {\n\tanswer[j] = i;\n\tj+= " + logicalAnd + ";\n}\n");
+                	} else {
+                		// current element is the entire set, remove if condition, and add increment codes
+                		sb.delete(sb.length() - 3, sb.length());
+                		sb.append("answer[j] = i;\nj+= " + logicalAnd + ";\n");
+                	}
             	} else {
             		// current &-term is not using no branch, append string and close the if condition
             		sb.append(logicalAnd);
