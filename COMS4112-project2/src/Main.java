@@ -205,12 +205,13 @@ public class Main {
 	    String output = "if(";
 	    String innerTerm = "";
 	    String noBranch = "";
-	    String logicalAnd = "";
+	    
 	    String branchingAnd = "";
 	    String loopInner = "";
 
 	    // code to add logical and terms
 	    for(Element e: planIndices){
+	    	String logicalAnd = "";
             Bitmap b = e.getBitmap();
             for(int i=0;i<b.length();i++){
                 if(b.get(i) == true) {
