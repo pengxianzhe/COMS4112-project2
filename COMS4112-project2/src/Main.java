@@ -197,7 +197,7 @@ public class Main {
 		
 		double piLeft = a[iLeft].getP(); // selectivity of set iLeft
 		int iLeftFCost = fCost(a, iLeft, configMap); // fixed cost of set iLeft
-		return piLeft > pj && (piLeft - 1) / iLeftFCost >= (pj - 1) / jFCost;
+		return piLeft > pj || (piLeft - 1) / iLeftFCost >= (pj - 1) / jFCost;
 	}
 
 	/**
@@ -222,7 +222,7 @@ public class Main {
             }
             double pi = a[i].getP(); // selectivity of set i
             int iFCost = fCost(a, i, configMap); // fixed cost of set i
-            return pi >= pj && iFCost >= jFCost;
+            return pi >= pj || iFCost >= jFCost;
         } else {
             // set i is not a &-term, find all &-terms in set i
             return dMetricCheck(a, pj, jFCost, left, leftMost, configMap) &&
