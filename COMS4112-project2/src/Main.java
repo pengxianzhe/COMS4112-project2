@@ -33,9 +33,9 @@ public class Main {
 		}
 		
 		// main loop
+		StringBuffer sb = new StringBuffer();
 		for (String query : queryList) {
 			// preprocessing query, compute number of basic terms and extract selectivity values
-			System.out.println(query);
 			String[] queryArray = query.trim().split(" ");
 			int k = queryArray.length; // number of basic terms for this query
 			int size = (int) Math.pow(2, k); // number of subsets for set S: 2 ^ k
@@ -55,9 +55,14 @@ public class Main {
 			step1(a, configMap);
 			step2(a, configMap);
 			
-			// print out the C code and cost for optimal plan
-			printOutput(a);
+			// create the C code and cost for optimal plan
+			formatOutput(a, query, sb);
 		}
+		
+		// print output for all queries
+		sb.append("==================================================================");
+		System.out.println(sb.toString());
+		// TODO: print to a file
 	}
 
 	/**
@@ -201,49 +206,51 @@ public class Main {
         }
     }
 
-	private static String generateCode(List<Element> planIndices){
-	    String output = "if(";
-	    String innerTerm = "";
-	    String noBranch = "";
+	private static void generateCode(List<Element> planIndices, StringBuffer sb) {
+	    sb.append("if(");
 	    
+	    String noBranch = "";
 	    String branchingAnd = "";
-	    String loopInner = "";
 
 	    // code to add logical and terms
-	    for(Element e: planIndices){
+	    for(int i = 0; i < planIndices.size(); i++) {
 	    	String logicalAnd = "";
+	    	Element e = planIndices.get(i);
             Bitmap b = e.getBitmap();
-            for(int i=0;i<b.length();i++){
-                if(b.get(i) == true) {
-                    int index = i+1;
-
-	                if(logicalAnd.length() > 0)
+            int count = 0;
+            for(int j = 0;j < b.length(); j++) {
+                if (b.get(j) == true) {
+                    int index = j+1;
+                    count++;
+	                if (logicalAnd.length() > 0)
 	                    logicalAnd += " & ";
 	                logicalAnd += "t" + index + "[o" + index + "[i]]";
                 }
             }
 
-            if(e.isB()){
-                if(noBranch.length() > 0)
-                    noBranch += " & ";
-                noBranch += logicalAnd;
-            }
-            else{
-                if(branchingAnd.length() > 0)
+            if (i == planIndices.size() - 1 && e.isB()) {
+                noBranch = logicalAnd;
+            } else {
+                if (branchingAnd.length() > 0)
                     branchingAnd += " && ";
-                branchingAnd += "(" + logicalAnd + ")";
+                if (count == 1) {
+                	branchingAnd += logicalAnd;
+                } else {
+                	branchingAnd += "(" + logicalAnd + ")";
+                }
             }
         }
 
-        output += branchingAnd + ") {";
+	    sb.append(branchingAnd);
+	    sb.append(") {\n");
 
-	    if(noBranch.length() == 0)
-	        loopInner += "answer[j++] = i; \n }";
-	    else
-	        loopInner += "\t answer[j] = i; \n j+= (" + noBranch + "); \n }";
-
-	    return output + loopInner;
-
+	    if(noBranch.length() == 0) {
+	        sb.append("\tanswer[j++] = i;\n}");
+	    } else {
+	        sb.append("\tanswer[j] = i;\n\tj+= (");
+	    	sb.append(noBranch);
+	    	sb.append(");\n}\n");
+	    }
     }
 
 	private static void backtrackPlan(Element[] a, int index, List<Element> planIndices) {
@@ -257,10 +264,17 @@ public class Main {
         }
     }
 	
-	private static void printOutput(Element[] a) {
+	private static void formatOutput(Element[] a, String query, StringBuffer sb) {
+		sb.append("==================================================================\n");
+		sb.append(query);
+		sb.append('\n');
+		sb.append("------------------------------------------------------------------\n");
 		List<Element> planIndices = new ArrayList<Element>();
 		backtrackPlan(a, a.length - 1, planIndices);
-		System.out.println(generateCode(planIndices));
+		generateCode(planIndices, sb);
+		sb.append("------------------------------------------------------------------\n");
+		sb.append("cost: " + a[a.length - 1].getC());
+		sb.append('\n');
 	}
 	
 	/**
